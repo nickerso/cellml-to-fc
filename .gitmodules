@@ -1,0 +1,3 @@
+[submodule "libcellml-python-utils"]
+	path = libcellml-python-utils
+	url = https://github.com/nickerso/libcellml-python-utils
