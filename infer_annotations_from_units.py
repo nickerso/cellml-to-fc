@@ -13,6 +13,17 @@ def _create_units(name, args):
     return u
 
 
+def _create_units_per(name, args, per_args):
+    u = libcellml.Units()
+    u.setName(name)
+    u.addUnit(*args)
+    u.addUnit(*per_args)
+    m = libcellml.Model()
+    m.addUnits(u)
+    print(cellml.print_model(m))
+    return u
+
+
 __quantities = {
     'mechanical': ['metre'],
     'volume': ['metre', 1, 3.0],
@@ -22,6 +33,14 @@ __quantities = {
     'energy': ['joule'],
 }
 __quantities_units = {k: _create_units(f'{k}_quantity_units', v) for k, v in __quantities.items()}
+__quantities_per_volume_units = {
+    k: _create_units_per(f'{k}_quantity_per_volume_units', v,
+                         ['metre', 1, -3.0]) for k, v in __quantities.items()
+}
+__quantities_per_time_units = {
+    k: _create_units_per(f'{k}_quantity_per_time_units', v,
+                         ['second', 1, -1.0]) for k, v in __quantities.items()
+}
 
 
 def variable_is_quantity(model, variable):
@@ -31,25 +50,26 @@ def variable_is_quantity(model, variable):
     if var_units is None:
         var_units = _create_units('', [var_units_name])
     for k, u in __quantities_units.items():
-        #print(f'{variable.name()} -- {var_units.name()} -- {k} -- {u.name()}')
         if libcellml.Units.compatible(var_units, u):
             print(f'Variable {variable.name()}  [{var_units_name}] is a quantity of type: {k}')
-    return True
+            return True
+    for k, u in __quantities_per_volume_units.items():
+        if libcellml.Units.compatible(var_units, u):
+            print(f'Variable {variable.name()}  [{var_units_name}] is a quantity per volume of type: {k}')
+            return True
+    for k, u in __quantities_per_time_units.items():
+        if libcellml.Units.compatible(var_units, u):
+            print(f'Variable {variable.name()}  [{var_units_name}] is a quantity per time of type: {k}')
+            return True
+    return False
 
 
 model = cellml.parse_model(sys.argv[1], False)
 if cellml.validate_model(model) > 0:
     exit(-1)
 
-# Find volume-equivalent variables
-volume_variables = []
 for i in range(model.componentCount()):
     comp = model.component(i)
     for j in range(comp.variableCount()):
         var = comp.variable(j)
         variable_is_quantity(model, var)
-
-# Output
-print("Variables with volume-equivalent units:")
-for comp_name, var_name, units in volume_variables:
-    print(f"Component: {comp_name}, Variable: {var_name}, Units: {units}")
