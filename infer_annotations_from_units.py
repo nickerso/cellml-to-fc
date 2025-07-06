@@ -16,8 +16,8 @@ def _create_units(name, args, args2=None):
 
 
 __quantities = {
-    'mechanical': ['metre'],
-    'volume': ['metre', 1, 3.0],
+    'solid_mechanics': ['metre'],
+    'fluid_mechanics': ['metre', 1, 3.0],
     'electromagnetic': ['coulomb'],
     'chemical': ['mole']
 }
@@ -34,32 +34,33 @@ __quantities_potential_units = {
 }
 
 
-def variable_is_quantity(model, variable):
+def infer_type_from_units(model, variable):
     var_units_name = variable.units().name()
     var_units = model.units(var_units_name)
     # we know we have a valid model, so if there are no units we have a standard unit
+    # create a standard unit Units for convenience with libcellml.Units.compatible()
     if var_units is None:
         var_units = _create_units('', [var_units_name])
     if libcellml.Units.compatible(var_units, __energy_units):
         print(f'Variable {variable.name()}  [{var_units_name}] is an energy variable')
-        return True
+        return __energy_units.name()
     if libcellml.Units.compatible(var_units, __time_units):
         print(f'Variable {variable.name()}  [{var_units_name}] is a time variable')
-        return True
+        return __time_units.name()
     for k, u in __quantities_units.items():
         if libcellml.Units.compatible(var_units, u):
             print(f'Variable {variable.name()}  [{var_units_name}] is a quantity of type: {k}')
-            return True
+            return u.name()
     for k, u in __quantities_flow_units.items():
         if libcellml.Units.compatible(var_units, u):
             print(f'Variable {variable.name()}  [{var_units_name}] is a flow of type: {k}')
-            return True
+            return u.name()
     for k, u in __quantities_potential_units.items():
         if libcellml.Units.compatible(var_units, u):
             print(f'Variable {variable.name()}  [{var_units_name}] is a potential of type: {k}')
-            return True
+            return u.name()
     print(f'Variable {variable.name()}  [{var_units_name}] is unknown type')
-    return False
+    return None
 
 
 model = cellml.parse_model(sys.argv[1], False)
@@ -70,4 +71,7 @@ for i in range(model.componentCount()):
     comp = model.component(i)
     for j in range(comp.variableCount()):
         var = comp.variable(j)
-        variable_is_quantity(model, var)
+        t = infer_type_from_units(model, var)
+        if t:
+            print(f'{var.name()} is of type: {t}')
+            
