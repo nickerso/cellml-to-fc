@@ -25,13 +25,14 @@ __energy_units = _create_units('energy', ['joule'])
 __time_units = _create_units('time', ['second'])
 __quantities_units = {k: _create_units(f'{k}_quantity_units', v) for k, v in __quantities.items()}
 __quantities_flow_units = {
-    k: _create_units(f'{k}_quantity_flow_units', v,
-                     ['second', 1, -1.0]) for k, v in __quantities.items()
+    f'{k}_flow': _create_units(f'{k}_flow_units', v,
+                               ['second', 1, -1.0]) for k, v in __quantities.items()
 }
 __quantities_potential_units = {
-    k: _create_units(f'{k}_quantity_potential_units', ['joule'],
+    f'{k}_potential': _create_units(f'{k}_potential_units', ['joule'],
                      [v[0], 1, v[2]*-1.0 if len(v) > 1 else -1.0]) for k, v in __quantities.items()
 }
+__all_types = __quantities_units | __quantities_flow_units | __quantities_potential_units
 
 
 def infer_type_from_units(model, variable):
@@ -42,24 +43,12 @@ def infer_type_from_units(model, variable):
     if var_units is None:
         var_units = _create_units('', [var_units_name])
     if libcellml.Units.compatible(var_units, __energy_units):
-        print(f'Variable {variable.name()}  [{var_units_name}] is an energy variable')
         return __energy_units.name()
     if libcellml.Units.compatible(var_units, __time_units):
-        print(f'Variable {variable.name()}  [{var_units_name}] is a time variable')
         return __time_units.name()
-    for k, u in __quantities_units.items():
+    for k, u in __all_types.items():
         if libcellml.Units.compatible(var_units, u):
-            print(f'Variable {variable.name()}  [{var_units_name}] is a quantity of type: {k}')
             return u.name()
-    for k, u in __quantities_flow_units.items():
-        if libcellml.Units.compatible(var_units, u):
-            print(f'Variable {variable.name()}  [{var_units_name}] is a flow of type: {k}')
-            return u.name()
-    for k, u in __quantities_potential_units.items():
-        if libcellml.Units.compatible(var_units, u):
-            print(f'Variable {variable.name()}  [{var_units_name}] is a potential of type: {k}')
-            return u.name()
-    print(f'Variable {variable.name()}  [{var_units_name}] is unknown type')
     return None
 
 
@@ -74,4 +63,3 @@ for i in range(model.componentCount()):
         t = infer_type_from_units(model, var)
         if t:
             print(f'{var.name()} is of type: {t}')
-            
