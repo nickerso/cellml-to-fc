@@ -2,17 +2,11 @@ import sys
 from pathlib import Path
 import libcellml
 from libcellml_python_utils import cellml
-from rdflib import Graph, Literal, RDF, URIRef, Namespace, BNode
+from rdflib import URIRef, RDF, OWL, RDFS, Literal
 from rdflib.namespace import DCTERMS
-
-__OMEX_LIBRARY_URL = 'http://omex-library.org/'
-OMEX = Namespace(__OMEX_LIBRARY_URL)
-BQBIOL = Namespace('http://biomodels.net/biology-qualifiers/')
-STD_TERM_URI = {
-    'molar_amount': URIRef('https://identifiers.org/opb:OPB_00425'),
-    'Na': URIRef('https://identifiers.org/CHEBI:29101'),
-    'proximal_tubule': URIRef('http://purl.obolibrary.org/obo/UBERON_0004134')
-}
+from omex_metadata import OmexMetadata
+import logging
+import re
 
 
 def _create_units(name, args, args2=None):
@@ -78,21 +72,52 @@ class InferTypeFromUnits:
         return None
 
 
-def make_local_uri(g, variable_id):
+def make_local_uri(om, base_id):
     counter = 1
-    while any(g.triples((URIRef(f'{__OMEX_LIBRARY_URL}#{variable_id}--s{counter}'), None, None))):
+    while om.has_triple(om.local_ns[f'{base_id}--s{counter}']):
         counter += 1
-    return URIRef(f'{__OMEX_LIBRARY_URL}#{variable_id}--s{counter}')
+    return om.local_ns[f'{base_id}--s{counter}']
 
 
-def annotate_variable(g, variable, variable_type, filename):
-    variable_uri = URIRef(f'{__OMEX_LIBRARY_URL}{filename}#{variable.id()}')
+COMPARTMENT_MAP = {
+    'pt': URIRef('http://purl.obolibrary.org/obo/UBERON_0004134')
+}
+SPECIES_MAP = {
+    'Na': URIRef('https://identifiers.org/CHEBI:29101')
+}
+
+def define_molar_amount_class(om, variable):
+    molar_amount = URIRef('https://identifiers.org/opb:OPB_00425')
+    variable_name = variable.name()
+    # q_{compartment}_{species}
+    pattern = r"^q_(?P<compartment>[^_]+)_(?P<species>.+)$"
+    match = re.match(pattern, variable_name)
+    if match:
+        compartment = match.group("compartment")
+        species = match.group("species")
+        print(f"Compartment: {compartment}, Species: {species}")
+        c = COMPARTMENT_MAP.get(compartment)
+        s = SPECIES_MAP.get(species)
+        if c and s:
+            custom_class = om.local_ns[f'molar-amount-{species}-{compartment}']
+            if not om.has_triple(custom_class):
+                om.add_triple(custom_class, RDF.type, OWL.Class)
+                om.add_triple(custom_class, RDFS.label, Literal(f"Molar amount of {species} in compartment {compartment}"))
+                om.add_triple(custom_class, om.BQBIOL_NS['isVersionOf'], molar_amount)
+                om.add_triple(custom_class, om.BQBIOL_NS['is'], s)
+                om.add_triple(custom_class, om.BQBIOL_NS['isPartOf'], c)
+            return custom_class
+    return None
+
+
+def annotate_variable(om, variable, variable_type):
+    variable_uri = URIRef(f'{om.OMEX_LIBRARY_URL}{om.get_annotation_source()}#{variable.id()}')
     if variable_type == 'chemical_quantity_units':
-        local_node = make_local_uri(g, variable.id())
-        g.add((variable_uri, BQBIOL['isPropertyOf'], local_node))
-        g.add((variable_uri, BQBIOL['isVersionOf'], STD_TERM_URI['molar_amount']))
-        g.add((local_node, BQBIOL['is'], STD_TERM_URI['Na']))
-        g.add((local_node, BQBIOL['isPartOf'], STD_TERM_URI['proximal_tubule']))
+        # can we determine what we need from the variable name?
+        o = define_molar_amount_class(om, variable)
+        if o:
+            om.add_triple(variable_uri, RDF.type, o)
+
 #
 # <http://omex-library.org/physical_process.omex/model.cellml#molar_amount_Na>
 #     bqbiol:isPropertyOf local:local-entity-0 ;
@@ -111,11 +136,13 @@ def main():
 
     units_inference = InferTypeFromUnits()
 
-    rdf_graph = Graph()
-    rdf_graph.bind('bqbiol', BQBIOL)
-    rdf_graph.bind('omex', OMEX)
-    model_file = input_file.name
-    rdf_file = model_file + '.rdf'
+    # Setup custom logger (optional)
+    logger = logging.getLogger("infer_units_annotations")
+    logger.setLevel(logging.INFO)
+
+    omex_metadata = OmexMetadata(f'aps-demo-model.omex', f'{input_file.name}.ttl')
+    omex_metadata.set_annotation_source(input_file.name)
+
     for i in range(model.componentCount()):
         comp = model.component(i)
         for j in range(comp.variableCount()):
@@ -123,8 +150,8 @@ def main():
             t = units_inference.infer_type_from_units(model, var)
             if t:
                 print(f'{var.name()} ({var.id()}) is of type: {t}')
-                annotate_variable(rdf_graph, var, t, model_file)
-    print(rdf_graph.serialize(format='ttl'))
+                annotate_variable(omex_metadata, var, t)
+    omex_metadata.save(overwrite=True)
 
 
 if __name__ == "__main__":
