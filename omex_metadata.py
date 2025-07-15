@@ -23,23 +23,24 @@ class OmexMetadata:
     OMEX_NS = Namespace(OMEX_LIBRARY_URL)
     BQBIOL_NS = Namespace('http://biomodels.net/biology-qualifiers/')
 
-    def __init__(self, archive_filename, filename=None, logger=None):
+    def __init__(self, archive_filename, filename, logger=None):
         """
         Initialize the RDF graph and optionally load from a file.
 
         Parameters:
             archive_filename (str or Path): The filename of the OMEX archive.
-            filename (str or Path): RDF file to load (optional).
+            filename (str or Path): RDF file to load and save.
             logger (logging.Logger): Optional logger to use. If not provided, a default logger is created.
         """
         self.omex_filename = archive_filename
-        self.local_ns = Namespace(f'{OmexMetadata.OMEX_LIBRARY_URL}{archive_filename}#')
+        self.archive_ns = Namespace(f'{OmexMetadata.OMEX_LIBRARY_URL}{archive_filename}/')
+        self.local_ns = Namespace(f'{OmexMetadata.OMEX_LIBRARY_URL}{archive_filename}/{filename}#')
         self.logger = logger or self._default_logger()
         self.graph = Graph()
         # default namespace bindings
         self.graph.bind('bqbiol', self.BQBIOL_NS)
         self.graph.bind('local', self.local_ns)
-        self.filename = Path(filename) if filename else None
+        self.filename = Path(filename)
         self.format = None
         self._current_file = None
 
@@ -115,3 +116,14 @@ class OmexMetadata:
     def __str__(self):
         name = self.filename.name if self.filename else "<in-memory>"
         return f"{self.__class__.__name__}('{name}', format='{self.format}') with {len(self.graph)} triples"
+
+    def annotate_molar_amount(self, variable):
+        if self.has_triple(variable, self.BQBIOL_NS['isVersionOf'],
+                           URIRef('https://identifiers.org/opb:OPB_00425')):
+            self.logger.debug(f'Variable {variable} already has molar amount annotation')
+        else:
+            self.add_triple(
+                variable,
+                self.BQBIOL_NS['isVersionOf'],
+                URIRef('https://identifiers.org/opb:OPB_00425')
+            )

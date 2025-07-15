@@ -7,6 +7,8 @@ from rdflib.namespace import DCTERMS
 from omex_metadata import OmexMetadata
 import logging
 import re
+import argparse
+
 
 
 def _create_units(name, args, args2=None):
@@ -20,12 +22,20 @@ def _create_units(name, args, args2=None):
     return u
 
 
+COMPARTMENT_MAP = {
+    'pt': URIRef('http://purl.obolibrary.org/obo/UBERON_0004134')
+}
+SPECIES_MAP = {
+    'Na': URIRef('https://identifiers.org/CHEBI:29101')
+}
+
+
 class InferTypeFromUnits:
     """
     Class to infer semantic types of model variables based on their units.
     """
 
-    def __init__(self):
+    def __init__(self, logger):
         """
         Initialize the inference engine.
         """
@@ -54,6 +64,7 @@ class InferTypeFromUnits:
                 self.__quantities_flow_units |
                 self.__quantities_potential_units
         )
+        self._logger = logger
 
     def infer_type_from_units(self, model, variable):
         var_units_name = variable.units().name()
@@ -71,52 +82,48 @@ class InferTypeFromUnits:
                 return u.name()
         return None
 
+    @staticmethod
+    def make_local_uri(om, base_id):
+        counter = 1
+        while om.has_triple(om.local_ns[f'{base_id}--s{counter}']):
+            counter += 1
+        return om.local_ns[f'{base_id}--s{counter}']
 
-def make_local_uri(om, base_id):
-    counter = 1
-    while om.has_triple(om.local_ns[f'{base_id}--s{counter}']):
-        counter += 1
-    return om.local_ns[f'{base_id}--s{counter}']
+    def define_molar_amount(self, om, variable):
+        variable_name = variable.name()
+        # q_{compartment}_{species}
+        pattern = r"^q_(?P<compartment>[^_]+)_(?P<species>.+)$"
+        match = re.match(pattern, variable_name)
+        if match:
+            compartment = match.group("compartment")
+            species = match.group("species")
+            self._logger.info(f"Compartment: {compartment}, Species: {species}")
+            c = COMPARTMENT_MAP.get(compartment)
+            s = SPECIES_MAP.get(species)
+            if c and s:
+                amount_label = f'molar-amount-{species}-{compartment}'
+                local_node = om.local_ns[amount_label]
+                if om.has_triple(local_node):
+                    self._logger.info(f'Found an existing node for the molar amount: {amount_label}')
+                else:
+                    self._logger.info(f'Making a new local node for the molar amount: {amount_label}')
+                    om.add_triple(local_node, om.BQBIOL_NS['is'], s)
+                    om.add_triple(local_node, om.BQBIOL_NS['isPartOf'], c)
+                return local_node
+        return None
 
+    def annotate_variable(self, om, variable, variable_type):
+        variable_uri = om.archive_ns[f'{om.get_annotation_source()}#{variable.id()}']
+        if variable_type == 'chemical_quantity_units':
+            om.annotate_molar_amount(variable_uri)
+            # can we determine what we need from the variable name?
+            o = self.define_molar_amount(om, variable)
+            if o:
+                if om.has_triple(variable_uri, om.BQBIOL_NS['isPropertyOf'], o):
+                    self._logger.info(f'Chemical quantity annotation exists for variable {variable_uri}')
+                else:
+                    om.add_triple(variable_uri, om.BQBIOL_NS['isPropertyOf'], o)
 
-COMPARTMENT_MAP = {
-    'pt': URIRef('http://purl.obolibrary.org/obo/UBERON_0004134')
-}
-SPECIES_MAP = {
-    'Na': URIRef('https://identifiers.org/CHEBI:29101')
-}
-
-def define_molar_amount_class(om, variable):
-    molar_amount = URIRef('https://identifiers.org/opb:OPB_00425')
-    variable_name = variable.name()
-    # q_{compartment}_{species}
-    pattern = r"^q_(?P<compartment>[^_]+)_(?P<species>.+)$"
-    match = re.match(pattern, variable_name)
-    if match:
-        compartment = match.group("compartment")
-        species = match.group("species")
-        print(f"Compartment: {compartment}, Species: {species}")
-        c = COMPARTMENT_MAP.get(compartment)
-        s = SPECIES_MAP.get(species)
-        if c and s:
-            custom_class = om.local_ns[f'molar-amount-{species}-{compartment}']
-            if not om.has_triple(custom_class):
-                om.add_triple(custom_class, RDF.type, OWL.Class)
-                om.add_triple(custom_class, RDFS.label, Literal(f"Molar amount of {species} in compartment {compartment}"))
-                om.add_triple(custom_class, om.BQBIOL_NS['isVersionOf'], molar_amount)
-                om.add_triple(custom_class, om.BQBIOL_NS['is'], s)
-                om.add_triple(custom_class, om.BQBIOL_NS['isPartOf'], c)
-            return custom_class
-    return None
-
-
-def annotate_variable(om, variable, variable_type):
-    variable_uri = URIRef(f'{om.OMEX_LIBRARY_URL}{om.get_annotation_source()}#{variable.id()}')
-    if variable_type == 'chemical_quantity_units':
-        # can we determine what we need from the variable name?
-        o = define_molar_amount_class(om, variable)
-        if o:
-            om.add_triple(variable_uri, RDF.type, o)
 
 #
 # <http://omex-library.org/physical_process.omex/model.cellml#molar_amount_Na>
@@ -129,18 +136,43 @@ def annotate_variable(om, variable, variable_type):
 
 
 def main():
-    input_file = Path(sys.argv[1])
+    parser = argparse.ArgumentParser(description="Infer annotations for CellML variables"
+                                                 " based on names and units.")
+    parser.add_argument("input_file", help='Path to the input CellML file')
+    parser.add_argument('-a', '--annotations', type=Path, required=True,
+                        help='Path to a file containing existing annotations, if any, and updated with new annotations.')
+    parser.add_argument('-o', '--omex-name', required=True,
+                        help='Name of the OMEX Archive file')
+    parser.add_argument('-v', '--verbose', action='store_true',
+                        help='Verbose output.')
+
+    args = parser.parse_args()
+
+    # Setup custom logger (optional)
+    logger = logging.getLogger("infer_units_annotations")
+    if not logger.handlers:
+        handler = logging.StreamHandler()
+        formatter = logging.Formatter('%(asctime)s [%(levelname)s] %(message)s')
+        handler.setFormatter(formatter)
+        logger.addHandler(handler)
+    if args.verbose:
+        logger.setLevel(logging.INFO)
+    else:
+        # only log errors and warnings?
+        logger.setLevel(logging.WARNING)
+
+    input_file = Path(args.input_file)
+    if not input_file.is_file():
+        print(f"Error: File '{input_file}' not found.", file=sys.stderr)
+        sys.exit(1)
+
     model = cellml.parse_model(input_file, False)
     if cellml.validate_model(model) > 0:
         exit(-1)
 
-    units_inference = InferTypeFromUnits()
+    units_inference = InferTypeFromUnits(logger)
 
-    # Setup custom logger (optional)
-    logger = logging.getLogger("infer_units_annotations")
-    logger.setLevel(logging.INFO)
-
-    omex_metadata = OmexMetadata(f'aps-demo-model.omex', f'{input_file.name}.ttl')
+    omex_metadata = OmexMetadata(args.omex_name, args.annotations, logger)
     omex_metadata.set_annotation_source(input_file.name)
 
     for i in range(model.componentCount()):
@@ -149,8 +181,8 @@ def main():
             var = comp.variable(j)
             t = units_inference.infer_type_from_units(model, var)
             if t:
-                print(f'{var.name()} ({var.id()}) is of type: {t}')
-                annotate_variable(omex_metadata, var, t)
+                logger.info(f'{var.name()} ({var.id()}) is of type: {t}')
+                units_inference.annotate_variable(omex_metadata, var, t)
     omex_metadata.save(overwrite=True)
 
 
