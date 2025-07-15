@@ -127,3 +127,14 @@ class OmexMetadata:
                 self.BQBIOL_NS['isVersionOf'],
                 URIRef('https://identifiers.org/opb:OPB_00425')
             )
+
+    def annotate_volume_amount(self, variable):
+        if self.has_triple(variable, self.BQBIOL_NS['isVersionOf'],
+                           URIRef('https://identifiers.org/opb:OPB_01322')):
+            self.logger.debug(f'Variable {variable} already has (liquid) volume amount annotation')
+        else:
+            self.add_triple(
+                variable,
+                self.BQBIOL_NS['isVersionOf'],
+                URIRef('https://identifiers.org/opb:OPB_01322')
+            )

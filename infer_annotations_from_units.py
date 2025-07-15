@@ -10,7 +10,6 @@ import re
 import argparse
 
 
-
 def _create_units(name, args, args2=None):
     u = libcellml.Units()
     u.setName(name)
@@ -23,10 +22,27 @@ def _create_units(name, args, args2=None):
 
 
 COMPARTMENT_MAP = {
-    'pt': URIRef('http://purl.obolibrary.org/obo/UBERON_0004134')
+    # proximal tubule (part of nephron)
+    'pt': URIRef('https://identifiers.org/UBERON:0004134'),
+    # ascending aorta
+    'aa': URIRef('https://identifiers.org/UBERON:0001496'),
+    # arterial system
+    'ac': URIRef('https://identifiers.org/UBERON:0004572'),
+    # venous system
+    'vc': URIRef('https://identifiers.org/UBERON:0004582'),
+    # renal glomerulus
+    'gl': URIRef('https://identifiers.org/UBERON:0000074'),
+    # digestive tract (note that FMA gastrointestinal tract includes liver)
+    'gi': URIRef('https://identifiers.org/UBERON:0001555'),
+    # epithelial cells of the proximal tubule? (proximal tubular epithelium)
+    'ptEpi': URIRef('https://identifiers.org/UBERON:0008404'),
+    # digestive tract epithelium
+    'giEpi': URIRef('https://identifiers.org/UBERON:0003929'),
 }
+
 SPECIES_MAP = {
-    'Na': URIRef('https://identifiers.org/CHEBI:29101')
+    'Na': URIRef('https://identifiers.org/CHEBI:29101'),  # sodium(1+)
+    'W': URIRef('https://identifiers.org/CHEBI:15377'),  # Water
 }
 
 
@@ -89,7 +105,7 @@ class InferTypeFromUnits:
             counter += 1
         return om.local_ns[f'{base_id}--s{counter}']
 
-    def define_molar_amount(self, om, variable):
+    def define_amount_node(self, om, variable, amount_type):
         variable_name = variable.name()
         # q_{compartment}_{species}
         pattern = r"^q_(?P<compartment>[^_]+)_(?P<species>.+)$"
@@ -101,15 +117,16 @@ class InferTypeFromUnits:
             c = COMPARTMENT_MAP.get(compartment)
             s = SPECIES_MAP.get(species)
             if c and s:
-                amount_label = f'molar-amount-{species}-{compartment}'
+                amount_label = f'{amount_type}-amount-{species}-{compartment}'
                 local_node = om.local_ns[amount_label]
                 if om.has_triple(local_node):
-                    self._logger.info(f'Found an existing node for the molar amount: {amount_label}')
+                    self._logger.info(f'Found an existing node for the {amount_type} amount: {amount_label}')
                 else:
-                    self._logger.info(f'Making a new local node for the molar amount: {amount_label}')
+                    self._logger.info(f'Making a new local node for the {amount_type} amount: {amount_label}')
                     om.add_triple(local_node, om.BQBIOL_NS['is'], s)
                     om.add_triple(local_node, om.BQBIOL_NS['isPartOf'], c)
                 return local_node
+        self._logger.info(f'Unable to map variable {variable_name} to a known compartment and species')
         return None
 
     def annotate_variable(self, om, variable, variable_type):
@@ -117,10 +134,19 @@ class InferTypeFromUnits:
         if variable_type == 'chemical_quantity_units':
             om.annotate_molar_amount(variable_uri)
             # can we determine what we need from the variable name?
-            o = self.define_molar_amount(om, variable)
+            o = self.define_amount_node(om, variable, 'molar')
             if o:
                 if om.has_triple(variable_uri, om.BQBIOL_NS['isPropertyOf'], o):
                     self._logger.info(f'Chemical quantity annotation exists for variable {variable_uri}')
+                else:
+                    om.add_triple(variable_uri, om.BQBIOL_NS['isPropertyOf'], o)
+        elif variable_type == 'fluid_mechanics_quantity_units':
+            om.annotate_volume_amount(variable_uri)
+            # can we determine what we need from the variable name?
+            o = self.define_amount_node(om, variable, 'liquid')
+            if o:
+                if om.has_triple(variable_uri, om.BQBIOL_NS['isPropertyOf'], o):
+                    self._logger.info(f'Fluid mechanics quantity annotation exists for variable {variable_uri}')
                 else:
                     om.add_triple(variable_uri, om.BQBIOL_NS['isPropertyOf'], o)
 
