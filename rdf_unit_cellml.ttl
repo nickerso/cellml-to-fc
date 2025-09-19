@@ -1,0 +1,83 @@
+@prefix ex: <./baseline_units.cellml#> .
+@prefix is_unit_of: <http://semanticscience.org/resource/SIO_000222> .
+@prefix opb: <http://identifiers.org/opb/> .
+
+ex:C_per_m2 is_unit_of: opb:OPB_01238 .
+
+ex:C_per_m2_s is_unit_of: opb:OPB_00318 .
+
+ex:C_per_m3 is_unit_of: opb:OPB_01237 .
+
+ex:C_per_m3_s is_unit_of: opb:OPB_00318 .
+
+ex:J is_unit_of: opb:OPB_00562 .
+
+ex:J_per_m2 is_unit_of: opb:OPB_01053 .
+
+ex:J_per_mol is_unit_of: opb:OPB_00378 .
+
+ex:K is_unit_of: opb:OPB_00293 .
+
+ex:N is_unit_of: opb:OPB_00034 .
+
+ex:Pa is_unit_of: opb:OPB_00509,
+        opb:OPB_01053 .
+
+ex:S is_unit_of: opb:OPB_00100 .
+
+ex:S_per_s is_unit_of: opb:OPB_00564 .
+
+ex:fA is_unit_of: opb:OPB_00318 .
+
+ex:fC is_unit_of: opb:OPB_00411 .
+
+ex:fmol is_unit_of: opb:OPB_00425 .
+
+ex:fmol_per_s is_unit_of: opb:OPB_00444,
+        opb:OPB_00592 .
+
+ex:kg is_unit_of: opb:OPB_01226 .
+
+ex:kg_per_m2 is_unit_of: opb:OPB_01593 .
+
+ex:kg_per_m3 is_unit_of: opb:OPB_01619 .
+
+ex:kg_per_s is_unit_of: opb:OPB_01220 .
+
+ex:m2 is_unit_of: opb:OPB_00295,
+        opb:OPB_01376 .
+
+ex:m2_per_s is_unit_of: opb:OPB_01643 .
+
+ex:m3 is_unit_of: opb:OPB_00154,
+        opb:OPB_00523 .
+
+ex:m3_per_s is_unit_of: opb:OPB_00299 .
+
+ex:mM is_unit_of: opb:OPB_00340,
+        opb:OPB_01532 .
+
+ex:mM_per_s is_unit_of: opb:OPB_00593 .
+
+ex:mV is_unit_of: opb:OPB_00506,
+        opb:OPB_01058,
+        opb:OPB_01169 .
+
+ex:mW is_unit_of: opb:OPB_00563 .
+
+ex:m_per_s is_unit_of: opb:OPB_00251 .
+
+ex:mol_per_m2 is_unit_of: opb:OPB_01529,
+        opb:OPB_01530 .
+
+ex:mol_per_m2_s is_unit_of: opb:OPB_00593 .
+
+ex:ms is_unit_of: opb:OPB_00402 .
+
+ex:rad is_unit_of: opb:OPB_01072,
+        opb:OPB_01601 .
+
+ex:rad_per_s is_unit_of: opb:OPB_01490 .
+
+ex:um is_unit_of: opb:OPB_00269,
+        opb:OPB_01064 .
