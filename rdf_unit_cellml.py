@@ -62,7 +62,7 @@ g.add((S, IS_UNIT_OF, OPB.OPB_00100))        # S -> thermodynamic entropy amount
 g.add((S_per_s, IS_UNIT_OF, OPB.OPB_00564))  # S_per_s -> entropy flow rate
 
 g.add((um, IS_UNIT_OF, OPB.OPB_01064))       # um -> constant, length
-g.add((um, IS_UNIT_OF, OPB.OPB_00269))       # um -> variable
+g.add((um, IS_UNIT_OF, OPB.OPB_00269))       # um -> variable, translational displacement
 
 g.add((m2, IS_UNIT_OF, OPB.OPB_00295))       # m2 -> constant, area
 g.add((m2, IS_UNIT_OF, OPB.OPB_01376))       # m2 -> variable, tensile distortion
@@ -75,22 +75,22 @@ g.add((rad, IS_UNIT_OF, OPB.OPB_01601))      # rad -> variable, rotational displ
 
 g.add((kg, IS_UNIT_OF, OPB.OPB_01226))      # kg -> mass of solid entity
 
-g.add((fmol, IS_UNIT_OF, OPB.OPB_00425))      # fmol -> molar amount of particles
+g.add((fmol, IS_UNIT_OF, OPB.OPB_00425))      # fmol -> molar amount of chemical
 
 g.add((fC, IS_UNIT_OF, OPB.OPB_00411))      # fC -> charge amount
 
-g.add((m_per_s, IS_UNIT_OF, OPB.OPB_00251))  # m/s -> velocity
+g.add((m_per_s, IS_UNIT_OF, OPB.OPB_00251))  # m/s -> lineal translational velocity
 
 g.add((m2_per_s, IS_UNIT_OF, OPB.OPB_01643))      # m2/s -> tensile distortion velocity
 
-g.add((m3_per_s, IS_UNIT_OF, OPB.OPB_00299))      # m3/s -> variable, spatial amount, fluid volume
+g.add((m3_per_s, IS_UNIT_OF, OPB.OPB_00299))      # m3/s -> fluid flow rate
 
 g.add((rad_per_s, IS_UNIT_OF, OPB.OPB_01490))      # rad/s -> rotational solid velocity
 
 g.add((kg_per_s, IS_UNIT_OF, OPB.OPB_01220))      # kg/s -> material flow rate
 
 g.add((fmol_per_s, IS_UNIT_OF, OPB.OPB_00592))      # fmol/s -> chemical amount flow rate
-g.add((fmol_per_s, IS_UNIT_OF, OPB.OPB_00444))      # fmol/s -> chemical amount flow rate
+g.add((fmol_per_s, IS_UNIT_OF, OPB.OPB_00544))      # fmol/s -> particle flow rate
 
 g.add((fA, IS_UNIT_OF, OPB.OPB_00318))      # fA -> charge flow rate
 
@@ -135,3 +135,4 @@ g.bind("is_unit_of", IS_UNIT_OF)
 
 # Print graph in Turtle format
 print(g.serialize(format="turtle"))
+
