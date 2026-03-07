@@ -30,6 +30,8 @@ COMPARTMENT_MAP = {
     'ac': URIRef('https://identifiers.org/UBERON:0004572'),
     # venous system
     'vc': URIRef('https://identifiers.org/UBERON:0004582'),
+    # capillary
+    'cc': URIRef('https://identifiers.org/UBERON:0001982'),
     # renal glomerulus
     'gl': URIRef('https://identifiers.org/UBERON:0000074'),
     # digestive tract (note that FMA gastrointestinal tract includes liver)
@@ -43,6 +45,24 @@ COMPARTMENT_MAP = {
 SPECIES_MAP = {
     'Na': URIRef('https://identifiers.org/CHEBI:29101'),  # sodium(1+)
     'W': URIRef('https://identifiers.org/CHEBI:15377'),  # Water
+}
+
+FLOW_MAP = {
+    # Chemical mass-action flow process
+    #'Na': URIRef('https://identifiers.org/opb:OPB_01087'),
+    # Advective transport process
+    #'W': URIRef('https://identifiers.org/opb:OPB_01729'),
+    # capillary
+    'cc': {
+        'source': 'ac',
+        'sink': 'vc'
+    },
+    'gl'
+}
+
+TRANSPORTER_MAP = {
+    # sodium:potassium-exchanging ATPase complex
+    'NKE': URIRef('https://identifiers.org/GO:0005890'),
 }
 
 
@@ -129,26 +149,59 @@ class InferTypeFromUnits:
         self._logger.info(f'Unable to map variable {variable_name} to a known compartment and species')
         return None
 
+    def define_flow_node(self, om, variable, flow_type):
+        variable_name = variable.name()
+        # v_{compartment}_{species} or v_{compartment}_{transporter}
+        pattern = r"^v_(?P<compartment>[^_]+)_(?P<species>.+)$"
+        match = re.match(pattern, variable_name)
+        if match:
+            compartment = match.group("compartment")
+            species = match.group("species")
+            self._logger.info(f"Compartment: {compartment}, Species: {species}")
+            c = COMPARTMENT_MAP.get(compartment)
+            s = FLOW_MAP.get(species)
+            if c and s:
+                flow_label = f'{flow_type}-flow-{species}-{compartment}'
+                local_node = om.local_ns[flow_label]
+                if om.has_triple(local_node):
+                    self._logger.info(f'Found an existing node for the {flow_type} flow: {flow_label}')
+                else:
+                    self._logger.info(f'Making a new local node for the {flow_type} amount: {flow_label}')
+                    om.add_triple(local_node, om.BQBIOL_NS['isVersionOf'], s)
+                return local_node
+        self._logger.info(f'Unable to map variable {variable_name} to a known compartment and species')
+        return None
+
     def annotate_variable(self, om, variable, variable_type):
         variable_uri = om.archive_ns[f'{om.get_annotation_source()}#{variable.id()}']
-        if variable_type == 'chemical_quantity_units':
+        if variable_type == 'time':
+            om.annotate_time(variable_uri)
+        elif variable_type == 'chemical_quantity_units':
             om.annotate_molar_amount(variable_uri)
             # can we determine what we need from the variable name?
             o = self.define_amount_node(om, variable, 'molar')
             if o:
-                if om.has_triple(variable_uri, om.BQBIOL_NS['isPropertyOf'], o):
-                    self._logger.info(f'Chemical quantity annotation exists for variable {variable_uri}')
-                else:
-                    om.add_triple(variable_uri, om.BQBIOL_NS['isPropertyOf'], o)
+               om.add_triple(variable_uri, om.BQBIOL_NS['isPropertyOf'], o)
         elif variable_type == 'fluid_mechanics_quantity_units':
             om.annotate_volume_amount(variable_uri)
             # can we determine what we need from the variable name?
             o = self.define_amount_node(om, variable, 'liquid')
             if o:
-                if om.has_triple(variable_uri, om.BQBIOL_NS['isPropertyOf'], o):
-                    self._logger.info(f'Fluid mechanics quantity annotation exists for variable {variable_uri}')
-                else:
-                    om.add_triple(variable_uri, om.BQBIOL_NS['isPropertyOf'], o)
+                om.add_triple(variable_uri, om.BQBIOL_NS['isPropertyOf'], o)
+        elif variable_type == 'chemical_flow_units':
+            om.annotate_molar_flow(variable_uri)
+            # can we determine what we need from the variable name?
+            o = self.define_flow_node(om, variable, 'molar')
+            if o:
+                om.add_triple(variable_uri, om.BQBIOL_NS['isPropertyOf'], o)
+        elif variable_type == 'fluid_mechanics_flow_units':
+            om.annotate_volume_flow(variable_uri)
+            # can we determine what we need from the variable name?
+            o = self.define_flow_node(om, variable, 'volume')
+            if o:
+                om.add_triple(variable_uri, om.BQBIOL_NS['isPropertyOf'], o)
+        else:
+            self._logger.debug(f'Unable to annotate {variable.name()}[{variable.id()}] of type: {variable_type}')
 
 
 #
@@ -178,11 +231,12 @@ def main():
     logger = logging.getLogger("infer_units_annotations")
     if not logger.handlers:
         handler = logging.StreamHandler()
-        formatter = logging.Formatter('%(asctime)s [%(levelname)s] %(message)s')
+        # formatter = logging.Formatter('%(asctime)s [%(levelname)s] %(message)s')
+        formatter = logging.Formatter('[%(levelname)s] %(message)s')
         handler.setFormatter(formatter)
         logger.addHandler(handler)
     if args.verbose:
-        logger.setLevel(logging.INFO)
+        logger.setLevel(logging.DEBUG)
     else:
         # only log errors and warnings?
         logger.setLevel(logging.WARNING)

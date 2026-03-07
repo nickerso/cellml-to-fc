@@ -118,23 +118,36 @@ class OmexMetadata:
         return f"{self.__class__.__name__}('{name}', format='{self.format}') with {len(self.graph)} triples"
 
     def annotate_molar_amount(self, variable):
-        if self.has_triple(variable, self.BQBIOL_NS['isVersionOf'],
-                           URIRef('https://identifiers.org/opb:OPB_00425')):
-            self.logger.debug(f'Variable {variable} already has molar amount annotation')
-        else:
-            self.add_triple(
-                variable,
-                self.BQBIOL_NS['isVersionOf'],
-                URIRef('https://identifiers.org/opb:OPB_00425')
-            )
+        self.add_triple(
+            variable,
+            self.BQBIOL_NS['isVersionOf'],
+            URIRef('https://identifiers.org/opb:OPB_00425')
+        )
+
+    def annotate_molar_flow(self, variable):
+        self.add_triple(
+            variable,
+            self.BQBIOL_NS['isVersionOf'],
+            URIRef('https://identifiers.org/opb:OPB_00592')
+        )
 
     def annotate_volume_amount(self, variable):
-        if self.has_triple(variable, self.BQBIOL_NS['isVersionOf'],
-                           URIRef('https://identifiers.org/opb:OPB_01322')):
-            self.logger.debug(f'Variable {variable} already has (liquid) volume amount annotation')
-        else:
-            self.add_triple(
-                variable,
-                self.BQBIOL_NS['isVersionOf'],
-                URIRef('https://identifiers.org/opb:OPB_01322')
-            )
+        self.add_triple(
+            variable,
+            self.BQBIOL_NS['isVersionOf'],
+            URIRef('https://identifiers.org/opb:OPB_01322')
+        )
+
+    def annotate_volume_flow(self, variable):
+        self.add_triple(
+            variable,
+            self.BQBIOL_NS['isVersionOf'],
+            URIRef('https://identifiers.org/opb:OPB_00299')
+        )
+
+    def annotate_time(self, variable):
+        self.add_triple(
+            variable,
+            self.BQBIOL_NS['isVersionOf'],
+            URIRef('https://identifiers.org/opb:OPB_01023')
+        )
