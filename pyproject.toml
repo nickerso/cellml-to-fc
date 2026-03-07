@@ -1,0 +1,10 @@
+[project]
+name = "cellml-to-fc"
+version = "0.1.0"
+description = "Process CellML models to get information required for SPARC FC maps."
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "libcellml>=0.6.3",
+    "rdflib>=7.1.4",
+]
