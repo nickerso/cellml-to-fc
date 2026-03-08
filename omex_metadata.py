@@ -120,8 +120,9 @@ class OmexMetadata:
         return result
 
     def add_triple(self, s, p, o):
-        self.graph.add((s, p, o))
-        self.logger.debug(f"Added triple: ({s}, {p}, {o})")
+        if not self.has_triple(s, p, o):
+            self.graph.add((s, p, o))
+            self.logger.debug(f"Added triple: ({s}, {p}, {o})")
 
     def __len__(self):
         return len(self.graph)

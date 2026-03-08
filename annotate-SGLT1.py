@@ -4,10 +4,59 @@
 import sys
 sys.path.insert(0, "libcellml_python_utils")
 
+from rdflib import URIRef
 from pathlib import Path
 from libcellml import Annotator
 from libcellml_python_utils import utilities, cellml
 from omex_metadata import OmexMetadata
+import logging
+import argparse
+from infer_variable_annotations import InferVariableAnnotations
+
+
+
+log = logging.getLogger("cellml-to-fc")
+log.setLevel(logging.INFO)
+terminal_handler = logging.StreamHandler(sys.stderr)
+terminal_handler.setLevel(logging.INFO)
+log.addHandler(terminal_handler)
+
+# These are the model compartments that we expect to see. The key is the abbreviation used in the variable 
+# names, and the value is the corresponding ontology term for that compartment.
+COMPARTMENT_MAP = {
+    # intracellular - treat it as the cytosol for now
+    'i': URIRef('https://identifiers.org/GO:0005829'),
+    # extracellular space
+    'o': URIRef('https://identifiers.org/GO:0005615'),
+}
+
+# These are the chemical species that we expect to see in the model. The key is the abbreviation used in the
+# variable names, and the value is the corresponding ontology term for that species.
+SPECIES_MAP = {
+    # sodium(1+)
+    'Na': URIRef('https://identifiers.org/CHEBI:29101'),
+    # glucose
+    'Glc': URIRef('https://identifiers.org/CHEBI:17234'),
+}
+
+SPECIES_NAME_MAPPINGS = {
+    'Nai': {
+        'compartment': COMPARTMENT_MAP['i'],
+        'species': SPECIES_MAP['Na']
+    },
+    'Nao': {
+        'compartment': COMPARTMENT_MAP['o'],
+        'species': SPECIES_MAP['Na']
+    },
+    'Glci': {
+        'compartment': COMPARTMENT_MAP['i'],
+        'species': SPECIES_MAP['Glc']
+    },
+    'Glco': {
+        'compartment': COMPARTMENT_MAP['o'],
+        'species': SPECIES_MAP['Glc']
+    },
+}
 
 
 class OmexArchive:
@@ -25,13 +74,45 @@ class OmexArchive:
     
 
 if __name__ == "__main__":
+
+    parser = argparse.ArgumentParser(description="Annotate the SGLT1 CellML model with additional information.")
+    parser.add_argument(
+        "--output-dir",
+        type=Path,
+        default=Path("SGLT1_annotated"),
+        help="Directory to save the annotated model and metadata files. Default: SGLT1_annotated",
+    )
+
+    # --- Logging options ---
+    parser.add_argument(
+        "--log-level",
+        choices=["DEBUG", "INFO", "WARNING", "ERROR"],
+        metavar="LEVEL",
+        help="Log verbosity: DEBUG (most verbose) → INFO → WARNING → ERROR (least verbose). ",
+    )
+    parser.add_argument(
+        "--debug",
+        action="store_true",
+        help="Enable debug logging. Equivalent to --log-level DEBUG.",
+    )
+
+    args = parser.parse_args()
+
+    if args.debug:
+        log.info('Debug logging enabled via --debug flag')
+        log.setLevel(logging.DEBUG)
+        terminal_handler.setLevel(logging.DEBUG)
+    elif args.log_level:
+        log.setLevel(getattr(logging, args.log_level))
+        terminal_handler.setLevel(getattr(logging, args.log_level))
+
     # URL of the original CellML model to be annotated - the full BG version of the model
     model_source_url = "https://models.physiomeproject.org/workspace/b65/rawfile/cc4effc03581119d92df4eb4fe08eaeb698ea86e/Electrogenic%20cotransporter/CellMLV2/SGLT1_BG.cellml"
     print("Annotating SGLT1 model with additional information...")
     print(f"Original model source URL: {model_source_url}")
     
     # Output path for the annotated model / OMEX archive source files
-    output_dir = Path("SGLT1_annotated")
+    output_dir = args.output_dir
     output_dir.mkdir(exist_ok=True)
     
     # Fetch and flatten the model, which also resolves imports and adds IDs to 
@@ -86,7 +167,26 @@ if __name__ == "__main__":
     omex_metadata.annotate_creator(annotations_uri, 'https://orcid.org/0000-0003-4667-9779') # Andre - we can say that Andre created the annotations themselves, even though the content is about the model created by others
     omex_metadata.annotate_created(annotations_uri)
 
+    # Now we can use our inference engine to add annotations for the variables based on their names and units.
+    annotation_inference = InferVariableAnnotations()
+    # set the annotation source to the model file, so that the variable annotations will be linked to the model in the metadata
+    omex_metadata.set_annotation_source(flat_sglt1_model)
+
+    # see what annotations we can infer for all variables in the model and add them to the metadata graph
+    for i in range(model.componentCount()):
+        comp = model.component(i)
+        for j in range(comp.variableCount()):
+            var = comp.variable(j)
+            t = annotation_inference.infer_type_from_units(model, var)
+            if t:
+                log.info(f'{comp.name()}/{var.name()} ({var.id()}) is of type: {t}')
+                annotation_inference.annotate_variable(omex_metadata, var, t, SPECIES_NAME_MAPPINGS)
+
+    # Save the annotations to file - we can save the RDF graph at any point, but we wait until
+    # the end here just to minimize file I/O during development
     omex_metadata.save(annotation_file, format="turtle", overwrite=True)
+    # These are the files that should be added to the OMEX archive. The actual creation of the archive is not yet implemented
+    # in this script, but would be a simple step of zipping these files together with the correct structure and manifest.
     omex.list_entries()
 
 
