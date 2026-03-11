@@ -24,6 +24,7 @@ class OmexMetadata:
     OMEX_NS = Namespace(OMEX_LIBRARY_URL)
     BQBIOL_NS = Namespace('http://biomodels.net/biology-qualifiers/')
     BQMODEL_NS = Namespace('http://biomodels.net/model-qualifiers/')
+    SEMSIM_NS = Namespace('http://bime.uw.edu/semsim/')
 
     def __init__(self, archive_filename, rdf_file: str | Path, base_dir: str | Path = None, logger=None):
         """
@@ -44,7 +45,9 @@ class OmexMetadata:
         self.graph = Graph()
         # default namespace bindings
         self.graph.bind('bqbiol', self.BQBIOL_NS)
+        self.graph.bind('bqmodel', self.BQMODEL_NS)
         self.graph.bind('local', self.local_ns)
+        self.graph.bind('semsim', self.SEMSIM_NS)
         self.filename = Path(rdf_file)
         self.format = None
         self._current_file = None

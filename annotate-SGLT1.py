@@ -4,7 +4,7 @@
 import sys
 sys.path.insert(0, "libcellml_python_utils")
 
-from rdflib import URIRef
+from rdflib import URIRef, Literal, XSD
 from pathlib import Path
 from libcellml import Annotator
 from libcellml_python_utils import utilities, cellml
@@ -28,6 +28,8 @@ COMPARTMENT_MAP = {
     'i': URIRef('https://identifiers.org/GO:0005829'),
     # extracellular space
     'o': URIRef('https://identifiers.org/GO:0005615'),
+    # membrane
+    'membrane': URIRef('https://identifiers.org/GO:0016020')
 }
 
 # These are the chemical species that we expect to see in the model. The key is the abbreviation used in the
@@ -200,6 +202,92 @@ if __name__ == "__main__":
                                                               SPECIES_NAME_MAPPINGS[vn]['species'])
         if amount_node:
             omex_metadata.add_triple(variable_uri, omex_metadata.BQBIOL_NS['isPropertyOf'], amount_node)
+
+    # v_1 = flow of Na  o => membrane
+    # v_2 = flow of Glc o ==> membrane
+    # v_4 = flow of Glc membrane ==> i
+    # v_5 = flow of Na memnbrane ==> i
+
+    # SGLT1 in the membrane
+    mediator = omex_metadata.local_ns['mediator']
+    omex_metadata.add_triple(mediator, omex_metadata.BQBIOL_NS['is'], URIRef('http://purl.obolibrary.org/obo/PR_P05023'))
+    omex_metadata.add_triple(mediator, omex_metadata.BQBIOL_NS['isPartOf'], URIRef('https://identifiers.org/GO:0016020'))
+
+    # need to define the membrane molar amounts
+    membrane_Na_node = annotation_inference.create_amount_node(
+        omex_metadata,
+        'molar',
+        'Na_membrane',
+        COMPARTMENT_MAP['membrane'],
+        SPECIES_MAP['Na']
+    )
+    membrane_Glc_node = annotation_inference.create_amount_node(
+        omex_metadata,
+        'molar',
+        'Glc_membrane',
+        COMPARTMENT_MAP['membrane'],
+        SPECIES_MAP['Glc']
+    )
+    
+    molar_flows = {
+        'v_1': {
+            'source': (omex_metadata.local_ns['molar-amount-Nao'], '2'),
+            'sink': (membrane_Na_node, '2'),
+            'process-name': 'molar-flow-Na-into-membrane'
+        },
+        'v_5': {
+            'sink': (omex_metadata.local_ns['molar-amount-Nai'], '2'),
+            'source': (membrane_Na_node, '2'),
+            'process-name': 'molar-flow-Na-out-of-membrane'
+        },
+        'v_2': {
+            'source': (omex_metadata.local_ns['molar-amount-Glco'], '1'),
+            'sink': (membrane_Glc_node, '1'),
+            'process-name': 'molar-flow-Glc-into-membrane'
+        },
+        'v_4': {
+            'sink': (omex_metadata.local_ns['molar-amount-Glci'], '1'),
+            'source': (membrane_Glc_node, '1'),
+            'process-name': 'molar-flow-Glc-out-of-membrane'
+        }
+
+    }
+    for flow, info in molar_flows.items():
+        v_uri = omex_metadata.get_annotation_source_uri(model.component('SGLT1_BG').variable(flow).id())
+        source_participant = annotation_inference.make_local_uri(omex_metadata, 'source-participant')
+        s = info['source']
+        omex_metadata.add_triple(source_participant, omex_metadata.SEMSIM_NS['hasMultiplier'], Literal(s[1], datatype=XSD.double))
+        omex_metadata.add_triple(source_participant, omex_metadata.SEMSIM_NS['hasPhysicalEntityReference'], s[0])
+        sink_participant = annotation_inference.make_local_uri(omex_metadata, 'sink-participant')
+        s = info['sink']
+        omex_metadata.add_triple(sink_participant, omex_metadata.SEMSIM_NS['hasMultiplier'], Literal(s[1], datatype=XSD.double))
+        omex_metadata.add_triple(sink_participant, omex_metadata.SEMSIM_NS['hasPhysicalEntityReference'], s[0])
+        mediator_participant = annotation_inference.make_local_uri(omex_metadata, 'mediator-participant')
+        omex_metadata.add_triple(mediator_participant, omex_metadata.SEMSIM_NS['hasPhysicalEntityReference'], mediator)
+        process_node = omex_metadata.local_ns[info['process-name']]
+        omex_metadata.add_triple(process_node, omex_metadata.SEMSIM_NS['hasMediatorParticipant'], mediator_participant)
+        omex_metadata.add_triple(process_node, omex_metadata.SEMSIM_NS['hasSinkParticipant'], sink_participant)
+        omex_metadata.add_triple(process_node, omex_metadata.SEMSIM_NS['hasSourceParticipant'], source_participant)
+        omex_metadata.add_triple(process_node, omex_metadata.BQBIOL_NS['isVersionOf'], URIRef('https://identifiers.org/GO:0140104'))
+        omex_metadata.add_triple(v_uri, omex_metadata.BQBIOL_NS['isPropertyOf'], process_node)
+
+    # # molar flow Nao -> Na membrane
+    # v_uri = omex_metadata.get_annotation_source_uri(model.component('SGLT1_BG').variable('v_1').id())
+    # source_participant = annotation_inference.make_local_uri(omex_metadata, 'source-participant')
+    # omex_metadata.add_triple(source_participant, omex_metadata.SEMSIM_NS['hasMultiplier'], Literal('2', datatype=XSD.double))
+    # omex_metadata.add_triple(source_participant, omex_metadata.SEMSIM_NS['hasPhysicalEntityReference'], omex_metadata.local_ns['molar-amount-Nao'])
+    # sink_participant = annotation_inference.make_local_uri(omex_metadata, 'sink-participant')
+    # omex_metadata.add_triple(sink_participant, omex_metadata.SEMSIM_NS['hasMultiplier'], Literal('2', datatype=XSD.double))
+    # omex_metadata.add_triple(sink_participant, omex_metadata.SEMSIM_NS['hasPhysicalEntityReference'], membrane_Na_node)
+    # mediator_participant = annotation_inference.make_local_uri(omex_metadata, 'mediator-participant')
+    # omex_metadata.add_triple(sink_participant, omex_metadata.SEMSIM_NS['hasPhysicalEntityReference'], mediator)
+    # process_node = omex_metadata.local_ns['molar-flow-Na-o--membrane']
+    # omex_metadata.add_triple(process_node, omex_metadata.SEMSIM_NS['hasMediatorParticipant'], mediator_participant)
+    # omex_metadata.add_triple(process_node, omex_metadata.SEMSIM_NS['hasSinkParticipant'], sink_participant)
+    # omex_metadata.add_triple(process_node, omex_metadata.SEMSIM_NS['hasSourceParticipant'], source_participant)
+    # omex_metadata.add_triple(process_node, omex_metadata.BQBIOL_NS['isVersionOf'], URIRef('https://identifiers.org/GO:0140104'))
+    # omex_metadata.add_triple(v_uri, omex_metadata.BQBIOL_NS['isPropertyOf'], process_node)
+    
 
     # Save the annotations to file - we can save the RDF graph at any point, but we wait until
     # the end here just to minimize file I/O during development
