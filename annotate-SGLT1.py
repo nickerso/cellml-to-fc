@@ -96,6 +96,12 @@ if __name__ == "__main__":
         help="Enable debug logging. Equivalent to --log-level DEBUG.",
     )
 
+    parser.add_argument(
+        "--infer",
+        action="store_true",
+        help="Infer variable annotations based on name and units.",
+    )
+
     args = parser.parse_args()
 
     if args.debug:
@@ -172,15 +178,28 @@ if __name__ == "__main__":
     # set the annotation source to the model file, so that the variable annotations will be linked to the model in the metadata
     omex_metadata.set_annotation_source(flat_sglt1_model)
 
-    # see what annotations we can infer for all variables in the model and add them to the metadata graph
-    for i in range(model.componentCount()):
-        comp = model.component(i)
-        for j in range(comp.variableCount()):
-            var = comp.variable(j)
-            t = annotation_inference.infer_type_from_units(model, var)
-            if t:
-                log.info(f'{comp.name()}/{var.name()} ({var.id()}) is of type: {t}')
-                annotation_inference.annotate_variable(omex_metadata, var, t, SPECIES_NAME_MAPPINGS)
+    if args.infer:
+        # see what annotations we can infer for all variables in the model and add them to the metadata graph
+        for i in range(model.componentCount()):
+            comp = model.component(i)
+            for j in range(comp.variableCount()):
+                var = comp.variable(j)
+                t = annotation_inference.infer_type_from_units(model, var)
+                if t:
+                    log.info(f'{comp.name()}/{var.name()} ({var.id()}) is of type: {t}')
+                    annotation_inference.annotate_variable(omex_metadata, var, t, SPECIES_NAME_MAPPINGS)
+
+
+    # manual annotations
+    # we know in this model that these concentrations are used in the params_BG component
+    for vn in SPECIES_NAME_MAPPINGS.keys():
+        variable_id = model.component('params_BG').variable(vn).id()
+        variable_uri = omex_metadata.get_annotation_source_uri(variable_id)
+        omex_metadata.annotate_chemical_concentration(variable_uri)
+        amount_node = annotation_inference.create_amount_node(omex_metadata, 'molar', vn, SPECIES_NAME_MAPPINGS[vn]['compartment'],
+                                                              SPECIES_NAME_MAPPINGS[vn]['species'])
+        if amount_node:
+            omex_metadata.add_triple(variable_uri, omex_metadata.BQBIOL_NS['isPropertyOf'], amount_node)
 
     # Save the annotations to file - we can save the RDF graph at any point, but we wait until
     # the end here just to minimize file I/O during development

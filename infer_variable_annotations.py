@@ -87,6 +87,18 @@ class InferVariableAnnotations:
         while om.has_triple(om.local_ns[f'{base_id}--s{counter}']):
             counter += 1
         return om.local_ns[f'{base_id}--s{counter}']
+    
+    @staticmethod
+    def create_amount_node(om, amount_type, name, compartment, species):
+        amount_label = f'{amount_type}-amount-{name}'
+        local_node = om.local_ns[amount_label]
+        if om.has_triple(local_node):
+            log.info(f'Found an existing node for the {amount_type} amount: {amount_label}; so not adding any new triples')
+        else:
+            log.info(f'Making a new local node for the {amount_type} amount: {amount_label}')
+            om.add_triple(local_node, om.BQBIOL_NS['is'], species)
+            om.add_triple(local_node, om.BQBIOL_NS['isPartOf'], compartment)
+        return local_node
 
     def define_amount_node(self, om, variable, amount_type, name_mappings):
         variable_name = variable.name()
@@ -102,15 +114,7 @@ class InferVariableAnnotations:
                 compartment = mapping['compartment']
                 species = mapping['species']
                 log.info(f"Compartment: {compartment}, Species: {species}")
-                amount_label = f'{amount_type}-amount-{name}'
-                local_node = om.local_ns[amount_label]
-                if om.has_triple(local_node):
-                    log.info(f'Found an existing node for the {amount_type} amount: {amount_label}; so not adding any new triples')
-                else:
-                    log.info(f'Making a new local node for the {amount_type} amount: {amount_label}')
-                    om.add_triple(local_node, om.BQBIOL_NS['is'], species)
-                    om.add_triple(local_node, om.BQBIOL_NS['isPartOf'], compartment)
-                return local_node
+                return self.create_amount_node(om, amount_type, name, compartment, species)
         log.warning(f'Unable to map amount variable {variable_name} to a known compartment and species')
         return None
 

@@ -166,6 +166,13 @@ class OmexMetadata:
             URIRef('https://identifiers.org/opb:OPB_00425')
         )
 
+    def annotate_chemical_concentration(self, variable):
+        self.add_triple(
+            variable,
+            self.BQBIOL_NS['isVersionOf'],
+            URIRef('https://identifiers.org/opb:OPB_00340')
+        )
+
     def annotate_molar_flow(self, variable):
         self.add_triple(
             variable,
