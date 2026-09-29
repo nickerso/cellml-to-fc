@@ -35,23 +35,23 @@ Entropy flow rate-->
         <unit exponent="-1" units="second"/>
     </units>
     <!-- Amount property   //-->
-    <!-- http://identifiers.org/opb/OPB_01064 when it is a constant, length
-  http://identifiers.org/opb/OPB_00269 when it is a variable, Translational displacement-->
+    <!-- http://identifiers.org/opb/OPB_00269
+ Translational displacement-->
     <units cmeta:id="um" name="um">
         <unit prefix="micro" units="meter"/>
     </units>
-    <!--http://identifiers.org/opb/OPB_00295 when it is a constant, area
- http://identifiers.org/opb/OPB_01376 when it is a variable, Tensile distortion-->
+    <!-- http://identifiers.org/opb/OPB_00295
+ Spatial area-->
     <units cmeta:id="m2" name="m2">
         <unit exponent="2" units="metre"/>
     </units>
-    <!--http://identifiers.org/opb/OPB_00523 when it is a constant, Spatial volume
- http://identifiers.org/opb/OPB_00154 when it is a variable, Spatial amount, Fluid volume-->
+    <!-- http://identifiers.org/opb/OPB_00154
+ Fluid volume-->
     <units cmeta:id="m3" name="m3">
         <unit exponent="3" units="metre"/>
     </units>
-    <!-- http://identifiers.org/opb/OPB_01072 when it is a constant, Plane angle
-  http://identifiers.org/opb/OPB_01601 when it is a variable, Rotational displacement  -->
+    <!--  http://identifiers.org/opb/OPB_01434 
+  Joint rotational displacement  -->
     <units cmeta:id="rad" name="rad">
         <unit units="radian"/>
     </units>
@@ -61,8 +61,7 @@ Mass of solid entity-->
         <unit units="kilogram"/>
     </units>
     <!--http://identifiers.org/opb/OPB_00425
- Molar amount of chemical
- Note, no OPB term for molar amount of particles -->
+ Molar amount of chemical -->
     <units cmeta:id="fmol" name="fmol">
         <unit prefix="femto" units="mole"/>
     </units>
@@ -78,20 +77,14 @@ Charge amount-->
         <unit units="metre"/>
         <unit exponent="-1" units="second"/>
     </units>
-    <!-- http://identifiers.org/opb/OPB_01643 
- Tensile distortion velocity-->
-    <units cmeta:id="m2_per_s" name="m2_per_s">
-        <unit units="m2"/>
-        <unit exponent="-1" units="second"/>
-    </units>
     <!--http://identifiers.org/opb/OPB_00299
 Fluid flow rate-->
     <units cmeta:id="m3_per_s" name="m3_per_s">
         <unit units="m3"/>
         <unit exponent="-1" units="second"/>
     </units>
-    <!--http://identifiers.org/opb/OPB_01490
- Rotational solid velocity -->
+    <!--http://identifiers.org/opb/OPB_01656
+ Joint rotational velocity -->
     <units cmeta:id="rad_per_s" name="rad_per_s">
         <unit units="radian"/>
         <unit exponent="-1" units="second"/>
@@ -102,30 +95,37 @@ Fluid flow rate-->
         <unit units="kilogram"/>
         <unit exponent="-1" units="second"/>
     </units>
-    <!--http://identifiers.org/opb/OPB_00592, Chemical amount flow rate
-http://identifiers.org/opb/OPB_00544, Particle flow rate-->
+    <!-- http://identifiers.org/opb/OPB_00592
+  Chemical amount flow rate-->
     <units cmeta:id="fmol_per_s" name="fmol_per_s">
         <unit units="fmol"/>
         <unit exponent="-1" units="second"/>
     </units>
-    <!--http://identifiers.org/opb/OPB_00318,Charge flow rate, =C/s-->
+    <!-- http://identifiers.org/opb/OPB_00318
+ Charge flow rate, =C/s-->
     <units cmeta:id="fA" name="fA">
         <unit prefix="femto" units="ampere"/>
     </units>
     <!-- effort, force property  //-->
-    <!-- http://identifiers.org/opb/OPB_00034
- Mechanical force, =J/m-->
+    <!-- http://identifiers.org/opb/OPB_01482
+ Lineal mechanical force, =J/m-->
     <units cmeta:id="N" name="N">
         <unit units="newton"/>
     </units>
+    <!-- http://identifiers.org/opb/OPB_01483
+ Rotational mechanical force, Torque-->
+    <!--  def unit{Torque} Torque as
+      unit newton;
+      unit meter;
+  enddef;-->
     <!-- http://identifiers.org/opb/OPB_01053
  Mechanical stress-->
     <units cmeta:id="J_per_m2" name="J_per_m2">
         <unit units="joule"/>
         <unit exponent="-1" units="m2"/>
     </units>
-    <!-- http://identifiers.org/opb/OPB_00509,Fluid pressure, =J/m3
- http://identifiers.org/opb/OPB_01053, Mechanical stress -->
+    <!-- http://identifiers.org/opb/OPB_00509
+ Fluid pressure, =J/m3-->
     <units cmeta:id="Pa" name="Pa">
         <unit units="pascal"/>
     </units>
@@ -135,66 +135,130 @@ http://identifiers.org/opb/OPB_00544, Particle flow rate-->
         <unit units="joule"/>
         <unit exponent="-1" units="mole"/>
     </units>
-    <!-- http://identifiers.org/opb/OPB_00506, Electrical potential (1), J/C
- http://identifiers.org/opb/OPB_01058, Membrane potential   
- http://identifiers.org/opb/OPB_01169, Electrodiffusional potential-->
+    <!-- http://identifiers.org/opb/OPB_00506
+  Electrical potential J/C-->
     <units cmeta:id="mV" name="mV">
         <unit prefix="milli" units="volt"/>
     </units>
     <!-- Amount density-->
-    <!--http://identifiers.org/opb/OPB_01593, Areal density of mass-->
+    <!--http://identifiers.org/opb/OPB_01597
+ Lineal density of mass-->
+    <units cmeta:id="kg_per_m" name="kg_per_m">
+        <unit units="kg"/>
+        <unit exponent="-1" units="meter"/>
+    </units>
+    <!--http://identifiers.org/opb/OPB_01593
+ Areal density of mass-->
     <units cmeta:id="kg_per_m2" name="kg_per_m2">
         <unit units="kg"/>
         <unit exponent="-1" units="m2"/>
     </units>
-    <!--http://identifiers.org/opb/OPB_01619, Volumnal density of matter-->
+    <!--http://identifiers.org/opb/OPB_01619
+ Volumnal density of matter-->
     <units cmeta:id="kg_per_m3" name="kg_per_m3">
         <unit units="kg"/>
         <unit exponent="-1" units="m3"/>
     </units>
-    <!--http://identifiers.org/opb/OPB_00340, Concentration of chemical,Volumnal concentration of solute (1)
-http://identifiers.org/opb/OPB_01532, Volumnal concentration of particles (2)-->
+    <!--http://identifiers.org/opb/OPB_00340
+ Concentration of chemical-->
     <units cmeta:id="mM" name="mM">
         <unit prefix="milli" units="mole"/>
         <unit exponent="-1" units="litre"/>
     </units>
-    <!-- http://identifiers.org/opb/OPB_01529, Areal concentration of chemical (1)
- http://identifiers.org/opb/OPB_01530, Areal concentration of particles (2)-->
+    <!-- http://identifiers.org/opb/OPB_01529
+  Areal concentration of chemical-->
     <units cmeta:id="mol_per_m2" name="mol_per_m2">
         <unit units="mole"/>
         <unit exponent="-1" units="m2"/>
     </units>
-    <!-- http://identifiers.org/opb/OPB_01238, Charge areal density-->
+    <!-- http://identifiers.org/opb/OPB_01528
+  Lineal concentration of chemical-->
+    <units cmeta:id="mol_per_m" name="mol_per_m">
+        <unit units="mole"/>
+        <unit exponent="-1" units="meter"/>
+    </units>
+    <!-- http://identifiers.org/opb/OPB_01239
+  Charge lineal density-->
+    <units cmeta:id="C_per_m" name="C_per_m">
+        <unit units="coulomb"/>
+        <unit exponent="-1" units="meter"/>
+    </units>
+    <!-- http://identifiers.org/opb/OPB_01238
+  Charge areal density-->
     <units cmeta:id="C_per_m2" name="C_per_m2">
         <unit units="coulomb"/>
         <unit exponent="-1" units="m2"/>
     </units>
-    <!-- http://identifiers.org/opb/OPB_01237,  Charge volumetric density -->
+    <!-- http://identifiers.org/opb/OPB_01237
+  Charge volumetric density -->
     <units cmeta:id="C_per_m3" name="C_per_m3">
         <unit units="coulomb"/>
         <unit exponent="-1" units="m3"/>
     </units>
     <!-- density flow rate    -->
-    <!--http://identifiers.org/opb/OPB_00593,Chemical amount density flow rate-->
+    <!-- http://identifiers.org/opb/OPB_00593
+ Chemical amount density flow rate-->
     <units cmeta:id="mM_per_s" name="mM_per_s">
         <unit units="mM"/>
         <unit exponent="-1" units="second"/>
     </units>
-    <!--http://identifiers.org/opb/OPB_00593,Chemical amount density flow rate-->
+    <!-- http://identifiers.org/opb/OPB_00593
+ Chemical amount density flow rate-->
     <units cmeta:id="mol_per_m2_s" name="mol_per_m2_s">
         <unit units="mol_per_m2"/>
         <unit exponent="-1" units="second"/>
     </units>
-    <!--http://identifiers.org/opb/OPB_00318,Charge flow rate
+    <!-- http://identifiers.org/opb/OPB_00593
+ Chemical amount density flow rate-->
+    <units cmeta:id="mol_per_m_s" name="mol_per_m_s">
+        <unit units="mol_per_m"/>
+        <unit exponent="-1" units="second"/>
+    </units>
+    <!--http://identifiers.org/opb/OPB_00318
+ Charge flow rate
+ No specific OPB term-->
+    <units cmeta:id="C_per_m_s" name="C_per_m_s">
+        <unit units="C_per_m"/>
+        <unit exponent="-1" units="second"/>
+    </units>
+    <!--http://identifiers.org/opb/OPB_00318
+ Charge flow rate
  No specific OPB term-->
     <units cmeta:id="C_per_m2_s" name="C_per_m2_s">
         <unit units="C_per_m2"/>
         <unit exponent="-1" units="second"/>
     </units>
-    <!--http://identifiers.org/opb/OPB_00318,Charge flow rate
+    <!--http://identifiers.org/opb/OPB_00318
+ Charge flow rate
  No specific OPB term-->
     <units cmeta:id="C_per_m3_s" name="C_per_m3_s">
         <unit units="C_per_m3"/>
         <unit exponent="-1" units="second"/>
+    </units>
+    <!-- Momentum rate property //
+ http://identifiers.org/opb/OPB_01521
+ A momentum property that is proportional to the temporal differential of an electrical current-->
+    <units cmeta:id="fA_per_s" name="fA_per_s">
+        <unit units="fA"/>
+        <unit exponent="-1" units="second"/>
+    </units>
+    <!-- http://identifiers.org/opb/OPB_00073
+ A momentum property that is proportional to the temporal differential of an fluid flow rate-->
+    <units cmeta:id="m3_per_s2" name="m3_per_s2">
+        <unit units="m3_per_s"/>
+        <unit exponent="-1" units="second"/>
+    </units>
+    <!-- http://identifiers.org/opb/OPB_00163 
+ Rotational momentum, N*m*s-->
+    <units cmeta:id="N_m_s" name="N_m_s">
+        <unit units="N"/>
+        <unit units="meter"/>
+        <unit units="second"/>
+    </units>
+    <!-- http://identifiers.org/opb/OPB_00033
+ Translational momentum, N*s-->
+    <units cmeta:id="N_s" name="N_s">
+        <unit units="N"/>
+        <unit units="second"/>
     </units>
 </model>
