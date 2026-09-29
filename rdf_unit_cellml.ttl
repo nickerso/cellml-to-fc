@@ -14,11 +14,15 @@ ex:C_per_m3_s is_unit_of: opb:OPB_00318 .
 
 ex:C_per_m_s is_unit_of: opb:OPB_00318 .
 
+ex:C_per_mol is_unit_of: opb:OPB_00089 .
+
 ex:J is_unit_of: opb:OPB_00562 .
 
 ex:J_per_m2 is_unit_of: opb:OPB_01053 .
 
 ex:J_per_mol is_unit_of: opb:OPB_00378 .
+
+ex:J_per_mol_K is_unit_of: opb:OPB_00410 .
 
 ex:K is_unit_of: opb:OPB_00293 .
 

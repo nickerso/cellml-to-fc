@@ -34,6 +34,19 @@ Entropy flow rate-->
         <unit units="S"/>
         <unit exponent="-1" units="second"/>
     </units>
+    <!--http://identifiers.org/opb/OPB_00410 
+Ideal gas constant-->
+    <units cmeta:id="J_per_mol_K" name="J_per_mol_K">
+        <unit units="joule"/>
+        <unit exponent="-1" units="mole"/>
+        <unit exponent="-1" units="kelvin"/>
+    </units>
+    <!--http://identifiers.org/opb/OPB_00089 
+Faraday constant-->
+    <units cmeta:id="C_per_mol" name="C_per_mol">
+        <unit units="coulomb"/>
+        <unit exponent="-1" units="mole"/>
+    </units>
     <!-- Amount property   //-->
     <!-- http://identifiers.org/opb/OPB_00269
  Translational displacement-->

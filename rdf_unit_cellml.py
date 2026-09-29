@@ -18,6 +18,8 @@ J = EX.J
 mW = EX.mW
 S = EX.S
 S_per_s = EX.S_per_s
+J_per_mol_K = EX.J_per_mol_K
+C_per_mol = EX.C_per_mol
 um = EX.um
 m2 = EX.m2
 m3 = EX.m3
@@ -67,6 +69,10 @@ g.add((mW, IS_UNIT_OF, OPB.OPB_00563))       # mW -> energy flow rate
 g.add((S, IS_UNIT_OF, OPB.OPB_00100))        # S -> thermodynamic entropy amount
 
 g.add((S_per_s, IS_UNIT_OF, OPB.OPB_00564))  # S_per_s -> entropy flow rate
+
+g.add((J_per_mol_K, IS_UNIT_OF, OPB.OPB_00410))  # Ideal gas constant
+
+g.add((C_per_mol, IS_UNIT_OF, OPB.OPB_00089))  # Faraday constant
 
 g.add((um, IS_UNIT_OF, OPB.OPB_00269))       # um -> translational displacement
 
