@@ -51,7 +51,7 @@ Faraday constant-->
     <!-- http://identifiers.org/opb/OPB_00269
  Translational displacement-->
     <units cmeta:id="um" name="um">
-        <unit prefix="micro" units="meter"/>
+        <unit prefix="micro" units="metre"/>
     </units>
     <!-- http://identifiers.org/opb/OPB_00295
  Spatial area-->
@@ -129,7 +129,7 @@ Fluid flow rate-->
  Rotational mechanical force, Torque-->
     <!--  def unit{Torque} Torque as
       unit newton;
-      unit meter;
+      unit metre;
   enddef;-->
     <!-- http://identifiers.org/opb/OPB_01053
  Mechanical stress-->
@@ -158,7 +158,7 @@ Fluid flow rate-->
  Lineal density of mass-->
     <units cmeta:id="kg_per_m" name="kg_per_m">
         <unit units="kg"/>
-        <unit exponent="-1" units="meter"/>
+        <unit exponent="-1" units="metre"/>
     </units>
     <!--http://identifiers.org/opb/OPB_01593
  Areal density of mass-->
@@ -188,13 +188,13 @@ Fluid flow rate-->
   Lineal concentration of chemical-->
     <units cmeta:id="mol_per_m" name="mol_per_m">
         <unit units="mole"/>
-        <unit exponent="-1" units="meter"/>
+        <unit exponent="-1" units="metre"/>
     </units>
     <!-- http://identifiers.org/opb/OPB_01239
   Charge lineal density-->
     <units cmeta:id="C_per_m" name="C_per_m">
         <unit units="coulomb"/>
-        <unit exponent="-1" units="meter"/>
+        <unit exponent="-1" units="metre"/>
     </units>
     <!-- http://identifiers.org/opb/OPB_01238
   Charge areal density-->
@@ -265,7 +265,7 @@ Fluid flow rate-->
  Rotational momentum, N*m*s-->
     <units cmeta:id="N_m_s" name="N_m_s">
         <unit units="N"/>
-        <unit units="meter"/>
+        <unit units="metre"/>
         <unit units="second"/>
     </units>
     <!-- http://identifiers.org/opb/OPB_00033
