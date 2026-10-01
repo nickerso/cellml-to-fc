@@ -1,4 +1,5 @@
 from rdflib import Graph, Namespace, URIRef
+from pathlib import Path
 
 # Create a Graph
 g = Graph()
@@ -134,7 +135,7 @@ g.add((C_per_m2_s, IS_UNIT_OF, OPB.OPB_00318))      # C/m2/s -> charge flow rate
 g.add((C_per_m3_s, IS_UNIT_OF, OPB.OPB_00318))      # C/m3/s -> charge flow rate
 
 g.add((fA_per_s, IS_UNIT_OF, OPB.OPB_01521))      # fA/s -> A momentum property that is proportional to the temporal differential of an electrical current
-g.add((m3_per_s2, IS_UNIT_OF, OPB.OPB_00073))      # m3/s2 -> A momentum property that is proportional to the temporal differential of an fluid flow rate
+g.add((m3_per_s2, IS_UNIT_OF, OPB.OPB_00073))      # m3/s2 -> A momentum property that is proportional to the temporal differential of a fluid flow rate
 g.add((N_m_s, IS_UNIT_OF, OPB.OPB_00163))        # Rotational momentum, N*m*s
 g.add((N_s, IS_UNIT_OF, OPB.OPB_00033))          # Translational momentum, N*s
 
@@ -144,5 +145,5 @@ g.bind("opb", OPB)
 g.bind("is_unit_of", IS_UNIT_OF)
 
 # Save graph in Turtle format
-g.serialize(destination="rdf_unit_cellml.ttl")
+g.serialize(destination=Path(__file__).parent /"rdf_unit_cellml.ttl")
 
