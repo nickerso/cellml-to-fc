@@ -256,7 +256,7 @@ Fluid flow rate-->
         <unit exponent="-1" units="second"/>
     </units>
     <!-- http://identifiers.org/opb/OPB_00073
- A momentum property that is proportional to the temporal differential of an fluid flow rate-->
+ A momentum property that is proportional to the temporal differential of a fluid flow rate-->
     <units cmeta:id="m3_per_s2" name="m3_per_s2">
         <unit units="m3_per_s"/>
         <unit exponent="-1" units="second"/>
